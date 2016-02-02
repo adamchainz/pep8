@@ -1118,7 +1118,7 @@ def comparison_type(logical_line, noqa):
         yield match.start(), "E721 do not compare types, use 'isinstance()'"
 
 
-def python_3000_has_key(logical_line, noqa):
+def python_3000_has_key(logical_line, noqa, tokens):
     r"""The {}.has_key() method is removed in Python 3: use the 'in' operator.
 
     Okay: if "alph" in d:\n    print d["alph"]
@@ -1126,6 +1126,20 @@ def python_3000_has_key(logical_line, noqa):
     """
     pos = logical_line.find('.has_key(')
     if pos > -1 and not noqa:
+        pos_has_key = -1
+        for i, token in enumerate(tokens):
+            if (
+                token[0] == tokenize.NAME and
+                token[1] == 'has_key' and
+                i < len(tokens) - 1 and
+                tokens[i + 1][0] == tokenize.OP
+            ):
+                pos_has_key = i
+                break
+
+        if pos_has_key == -1:
+            return
+
         yield pos, "W601 .has_key() is deprecated, use 'in'"
 
 
